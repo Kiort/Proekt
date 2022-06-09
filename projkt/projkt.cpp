@@ -1,202 +1,200 @@
 ﻿#include <iostream>
+#include <math.h>
 using namespace std;
 
-void filing(double** mass, int **graf, int koll) {
+void filing(int** mass, int** spid, int** stoper, int koll) {
 	for (int i = 0; i < koll; i++)
 		for (int j = 0; j < koll; j++)
 			mass[i][j] = 0;
+	int* lidr;
+	lidr = new int[koll];
+
+	for (int i = 0; i < koll; i++)
+		lidr[i] = 0;
 
 	for (int i = 0; i < koll; i++) {
 		for (int j = 0; j < i; j++) {
-					mass[i][j] = rand() % 10;
+			if (i != j) {
+				if (lidr[i] < 4 && lidr[j] < 4) {
+					lidr[i]++;
+					lidr[j]++;
+					mass[i][j] = rand() % 100 + 30;
 					mass[j][i] = mass[i][j];
-					if (mass[i][j] != 0) {
-						graf[i][j] = (rand() % 9)+1;
-						graf[j][i] = graf[i][j];
+					spid[i][j] = rand() % 10 + 1;
+					spid[j][i] = spid[i][j];
+					stoper[i][j] = rand() % 10;
+					stoper[j][i] = stoper[i][j];
+				}
+			}
+
+		}
+		mass[i][i] = 0;
+	}
+	delete[] lidr;
+}//Заполнений матриц
+void outer(int** mass, int koll) {
+	cout << endl;
+	for (int i = 0; i < koll; i++) {
+		cout << endl;
+		for (int j = 0; j < koll; j++)
+			cout << mass[i][j] << " ";
+	}
+}// Вывод матрицы
+void BR(int** mass, int koll) {
+
+
+	int* help;
+	help = new int[koll];	// массив обратных элементов
+	for (int i = 0; i < koll; i++)
+		help[i] = -1;
+
+	int min = 11;
+	//	int ll;
+	bool flag = false;
+	//	cout << "\n\n";
+	for (int i = 0; i < koll; i++) {							// нахождение вершин между которых находятся устраивающие нас пути
+		min = 11;
+		for (int j = 0; j < koll; j++) {
+			if (mass[i][j] != 0) {
+				if (i != help[j]) {
+					if (i != 0) {
+						if (help[i - 1] + 1 != j) {
+							//							flag = true;
+							if (min > mass[i][j]) {
+								min = mass[i][j];
+								help[i] = j;
+							}
+						}
+					}
+					else
+					{
+						if (min > mass[i][j]) {
+							min = mass[i][j];
+							help[i] = j;
+						}
 					}
 				}
-			
-		mass[i][i] = 0;
-		graf[i][i] = 0;
+			}
+		}
+		//		cout <<i<<"  " <<help[i] << " / ";
 	}
-		
-}
 
-void timert(double ** mass, int** graf, int koll) {
+
+	//	cout << "\n\n";
+
+	for (int i = 0; i < koll; i++)						//Удаление всего лишнего
+		for (int j = 0; j < koll; j++) {
+			if (i < j) {
+				if (mass[i][j] != 0) {
+					if (j != help[i] && i != help[j]) {
+						mass[i][j] = 0;
+						mass[j][i] = 0;
+					}
+				}
+			}
+		}
+	delete[] help;
+}//поиск оптимальной сети
+void matrix(int** mass, int** spid, int** stoper, int koll) {
 	for (int i = 0; i < koll; i++)
 		for (int j = 0; j < koll; j++)
-			mass[i][j] = mass[i][j] / graf[i][j];
-
-}
-
-
-int liner(int** mass, int koll) {
-	int lin = 0;
+			if (mass[i][j] != 0)
+				mass[i][j] = mass[i][j] / spid[i][j] + stoper[i][j];
+}   //Расчет веса каждого пути зависимости от его длины, скорости и задержки
+void kopi(int** mass, int** help, int koll) {
+	for (int i = 0; i < koll; i++)
+		for (int j = 0; j < koll; j++)
+			help[i][j] = mass[i][j];
+}//Копирование матриц
+void minway(int** mass, int koll) {
+	double min = 0;
 	for (int i = 0; i < koll; i++) {
-		for (int j = 0; j < i; j++)
-			if (mass[i][j] != 0)
-				lin++;
-	}
-	return(lin);
-}
-	
-void KP(int** mass, int koll) {
-	int lin = liner(mass,koll);
-	int min = 3;
-
-	int** help;
-	help = new int* [3];
-	for (int i = 0; i < min; i++)
-		help[i] = new int[300];
-
-	min = 11;
-	int ll = 0;
-	int* mm = new int[lin];
-	for (int i = 0; i < lin; i++)
-		mm[i] = 0;
-	int fix = lin;
-
-	for (int i = 0; i < koll; i++)					//массив длин и точек
-		for (int j = 0; j < i; j++) {
-			if (mass[i][j] != 0)
-			{
-				help[0][ll] = mass[i][j];
-				help[1][ll] = i;
-				help[2][ll] = j;
-				ll++;
+		min = 6000000;
+		for (int j = 0; j < koll; j++) {
+			if (mass[i][j] < min && mass[i][j] != 0) {
+				min = mass[i][j];
+			}
+			else {
+				mass[i][j] = 0;
+				mass[j][i] = 0;
 			}
 		}
-
-	for (int i = 0; i < lin; i++)					//Сортировка массива по возрастанию
-		for (int j = 0; j < lin; j++)
-			if (help[0][i] < help[0][j]) {
-				ll = help[0][i];
-				help[0][i] = help[0][j];
-				help[0][j] = ll;
-
-				ll = help[1][i];
-				help[1][i] = help[1][j];
-				help[1][j] = ll;
-
-
-				ll = help[2][i];
-				help[2][i] = help[2][j];
-				help[2][j] = ll;
-			}
-
-
-	int mirt = 0;
-
-	while (fix != 0) {										//Очищение основной матрици
-		if (mirt == ll)
-			break;
-
-		if (mm[help[1][mirt]] < 2 && mm[help[2][mirt]] < 2) {
-			mm[help[1][mirt]]++;
-			mm[help[2][mirt]]++;
-		}
-		else {
-			mass[help[1][mirt]][help[2][mirt]] = 0;
-			mass[help[2][mirt]][help[1][mirt]] = 0;
-		}
-		mirt++;
-		fix--;
 	}
-
-	delete[] help;
-	delete[] mm;
-
-
-}
-
-
-
-
-
-
-
+}//Поиск минимального пути
+void maxway(int** mass, int koll) {
+	double max = 0;
+	for (int i = 0; i < koll; i++) {
+		max = 0;
+		for (int j = 0; j < koll; j++) {
+			if (mass[i][j] > max && mass[i][j] != 0) {
+				max = mass[i][j];
+			}
+			else {
+				mass[i][j] = 0;
+				mass[j][i] = 0;
+			}
+		}
+	}
+} //Поиск максимального пути
 
 
 int main()
 {
-
 	setlocale(LC_ALL, "rus");
-
-	int k = 0;
-	cout << "Введите разрешение матрицы  ";
-
+	int k;
+	cout << "Введите размер  ";
 	cin >> k;
 
-	cout << "\n\n\nМатрица   " << k << " х " << k;
-	double** mass;
-	mass = new double* [k];
+	int** mass;
+	mass = new int* [k];
 	for (int j = 0; j < k; j++) {
-		mass[j] = new double[k];
+		mass[j] = new int[k];
 		for (int l = 0; l < k; l++)
 			mass[j][l] = 0;
 	}
-	int** graf;
-	graf = new int* [k];
+	int** spid;
+	spid = new int* [k];
 	for (int j = 0; j < k; j++) {
-		graf[j] = new int[k];
+		spid[j] = new int[k];
 		for (int l = 0; l < k; l++)
-			graf[j][l] = 0;
+			spid[j][l] = 0;
+	}
+	int** stoper;
+	stoper = new int* [k];
+	for (int j = 0; j < k; j++) {
+		stoper[j] = new int[k];
+		for (int l = 0; l < k; l++)
+			stoper[j][l] = 0;
+	}
+	int** helper;
+	helper = new int* [k];
+	for (int j = 0; j < k; j++) {
+		helper[j] = new int[k];
+		for (int l = 0; l < k; l++)
+			helper[j][l] = 0;
 	}
 
-	double* way = new double[k];
+	filing(mass, spid, stoper, k);
 
 
-	filing(mass,graf, k);
-	for (int i = 0; i < k; i++) {
-		cout << endl;
-		for (int j = 0; j < k; j++)
-			cout << mass[i][j] << "  ";
-	}
-	cout << endl; cout << endl;
-	for (int i = 0; i < k; i++) {
-		cout << endl;
-		for (int j = 0; j < k; j++)
-			cout << graf[i][j] << "  ";
-	}
-	cout << endl; cout << endl;
+	kopi(mass, helper, k);
+	matrix(helper, spid, stoper, k);
 
-	timert(mass, graf, k);
+	outer(helper, k);
+	BR(helper, k);
+	outer(helper, k);
 
-	for (int i = 0; i < k; i++)
-		for (int j = 0; j < k; j++)
-			graf[i][j] = mass[i][j];
-	cout << "g";
-	KP(graf,k);
+	kopi(mass, helper, k);
+	minway(helper, k);
+	outer(helper, k);
 
-	cout << "g";
-	for (int i = 0; i < k; i++) {
-		cout << endl;
-		for (int j = 0; j < k; j++)
-			if (i == j)
-				cout << graf[i][j] << "  ";
-			else
-				cout << "0  ";
-	}
-	cout << endl; cout << endl;
+
+	kopi(mass, helper, k);
+	maxway(helper, k);
+	outer(helper, k);
 
 
 
 
 
-
-
-
-
-
-
-
-
-	for (int i = 0; i < k; i++)
-		delete[] mass[i];
-	delete[] mass;
-	for (int i = 0; i < k; i++)
-		delete[] graf[i];
-	delete[] graf;
-
-	
 }
